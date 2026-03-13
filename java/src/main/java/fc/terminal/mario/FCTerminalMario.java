@@ -362,7 +362,9 @@ public class FCTerminalMario {
 
         InputHandler() throws IOException {
             if (IS_WINDOWS) {
-                terminal = TerminalBuilder.terminal();
+                terminal = TerminalBuilder.builder()
+                    .encoding(StandardCharsets.UTF_8)
+                    .build();
                 terminal.enterRawMode();
                 reader = LineReaderBuilder.builder().terminal(terminal).build();
             } else {

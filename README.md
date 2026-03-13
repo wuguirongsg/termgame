@@ -60,7 +60,7 @@ java -jar java/target/mario-java-1.0-SNAPSHOT.jar
 ```powershell
 # 设置 UTF-8 编码（解决乱码）
 chcp 65001
-java -jar java/target/mario-java-1.0-SNAPSHOT.jar
+java -Dfile.encoding=UTF-8 -jar ./java/target/mario-java-1.0-SNAPSHOT.jar
 ```
 
 **注意：** Java 版本使用 JLine 库处理跨平台终端输入
