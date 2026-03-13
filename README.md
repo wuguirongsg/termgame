@@ -61,9 +61,14 @@ java -jar java/target/mario-java-1.0-SNAPSHOT.jar
 **要求：** Python 3.6+
 
 ```bash
-# 运行
+# macOS/Linux
 python3 python/mario.py
+
+# Windows
+python python/mario.py
 ```
+
+**注意：** Windows 终端需要支持 ANSI 颜色代码（Windows 10+ 默认支持）
 
 ### 控制方式
 
@@ -169,9 +174,14 @@ java -jar java/target/mario-java-1.0-SNAPSHOT.jar
 **Requirements:** Python 3.6+
 
 ```bash
-# Run
+# macOS/Linux
 python3 python/mario.py
+
+# Windows
+python python/mario.py
 ```
+
+**Note:** Windows terminal needs to support ANSI color codes (Windows 10+ supports by default)
 
 ### Controls
 

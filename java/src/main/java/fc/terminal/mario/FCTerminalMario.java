@@ -353,20 +353,27 @@ public class FCTerminalMario {
         final ConcurrentHashMap<String,Long> times = new ConcurrentHashMap<>();
         volatile boolean quit = false;
         Process sttyProc;
+        static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+        InputStream terminalIn;
 
         InputHandler() throws IOException {
-            new ProcessBuilder("sh","-c","stty raw -echo </dev/tty").inheritIO().start();
-            Thread t = new Thread(this::loop,"input");
-            t.setDaemon(true); t.start();
+            if (IS_WINDOWS) {
+                terminalIn = System.in;
+            } else {
+                new ProcessBuilder("sh", "-c", "stty raw -echo </dev/tty").inheritIO().start();
+                terminalIn = new FileInputStream("/dev/tty");
+            }
+            Thread t = new Thread(this::loop, "input");
+            t.setDaemon(true);
+            t.start();
         }
 
         void loop() {
             try {
-                InputStream in = new FileInputStream("/dev/tty");
                 byte[] buf = new byte[8];
                 while (!quit) {
-                    if (in.available() > 0) {
-                        int n = in.read(buf);
+                    if (terminalIn.available() > 0) {
+                        int n = terminalIn.read(buf);
                         if (n > 0) parseInput(buf, n);
                     } else {
                         Thread.sleep(16);
@@ -378,6 +385,10 @@ public class FCTerminalMario {
         void parseInput(byte[] buf, int n) {
             if (n == 1) {
                 char c = (char)(buf[0] & 0xFF);
+                if (c == 27) {
+                    press("esc");
+                    return;
+                }
                 press(String.valueOf(c).toLowerCase());
             } else if (n >= 3 && buf[0]==0x1B && buf[1]=='[') {
                 switch(buf[2]) {
@@ -403,7 +414,9 @@ public class FCTerminalMario {
 
         void restore() throws IOException {
             quit = true;
-            new ProcessBuilder("sh","-c","stty sane </dev/tty").inheritIO().start();
+            if (!IS_WINDOWS) {
+                new ProcessBuilder("sh", "-c", "stty sane </dev/tty").inheritIO().start();
+            }
         }
     }
 

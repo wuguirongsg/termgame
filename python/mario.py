@@ -6,7 +6,14 @@
 ║   Controls: A/← D/→ Move  SPACE Jump  Q Quit        ║
 ╚══════════════════════════════════════════════════════╝
 """
-import sys, time, threading, tty, termios, select, signal, os
+import sys, time, threading, os
+
+IS_WINDOWS = os.name == 'nt'
+
+if IS_WINDOWS:
+    import msvcrt
+else:
+    import tty, termios, select, signal
 
 # ═══════════════════════════════════════════════════════════
 #  TERMINAL CONTROL
@@ -343,13 +350,24 @@ class Input:
     def __init__(self):
         self._times = {}
         self._quit  = False
-        self.fd     = sys.stdin.fileno()
-        self._old   = termios.tcgetattr(self.fd)
-        tty.setraw(self.fd)
-        t = threading.Thread(target=self._loop, daemon=True)
-        t.start()
+        
+        if IS_WINDOWS:
+            t = threading.Thread(target=self._loop, daemon=True)
+            t.start()
+        else:
+            self.fd     = sys.stdin.fileno()
+            self._old   = termios.tcgetattr(self.fd)
+            tty.setraw(self.fd)
+            t = threading.Thread(target=self._loop, daemon=True)
+            t.start()
 
     def _loop(self):
+        if IS_WINDOWS:
+            self._loop_windows()
+        else:
+            self._loop_unix()
+
+    def _loop_unix(self):
         while not self._quit:
             r, _, _ = select.select([sys.stdin], [], [], 0.04)
             if not r: continue
@@ -368,6 +386,30 @@ class Input:
             else:
                 self._press(ch.lower())
 
+    def _loop_windows(self):
+        while not self._quit:
+            if msvcrt.kbhit():
+                ch = msvcrt.getch()
+                if ch == b'\x1b':
+                    ch2 = msvcrt.getch()
+                    if ch2 == b'[':
+                        ch3 = msvcrt.getch()
+                        if   ch3 == b'A': self._press('up')
+                        elif ch3 == b'B': self._press('down')
+                        elif ch3 == b'C': self._press('right')
+                        elif ch3 == b'D': self._press('left')
+                    else:
+                        self._press('esc')
+                elif ch == b'\x03':
+                    self._press('q')
+                else:
+                    try:
+                        ch_str = ch.decode('utf-8').lower()
+                        self._press(ch_str)
+                    except:
+                        pass
+            time.sleep(0.01)
+
     def _press(self, k): self._times[k] = time.time()
 
     def held(self, k, window=0.3):
@@ -380,7 +422,8 @@ class Input:
 
     def restore(self):
         self._quit = True
-        termios.tcsetattr(self.fd, termios.TCSADRAIN, self._old)
+        if not IS_WINDOWS:
+            termios.tcsetattr(self.fd, termios.TCSADRAIN, self._old)
 
 # ═══════════════════════════════════════════════════════════
 #  LEVEL DATA
