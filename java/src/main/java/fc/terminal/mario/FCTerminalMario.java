@@ -878,10 +878,12 @@ public class FCTerminalMario {
     //  ENTRY POINT
     // ══════════════════════════════════════════════════════════
     public static void main(String[] args) throws Exception {
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
         OUT = new PrintStream(
             new BufferedOutputStream(System.out, 131072),
             false, StandardCharsets.UTF_8
         );
+        OUT.print(ESC + "[?1049h" + ESC + "[?25l" + CLEAR);
         System.out.println("Starting FC Terminal Mario...");
         Thread.sleep(500);
         new Game().run();
