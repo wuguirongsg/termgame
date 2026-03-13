@@ -56,6 +56,15 @@ mvn package
 java -jar java/target/mario-java-1.0-SNAPSHOT.jar
 ```
 
+**Windows 运行：**
+```powershell
+# 设置 UTF-8 编码（解决乱码）
+chcp 65001
+java -jar java/target/mario-java-1.0-SNAPSHOT.jar
+```
+
+**注意：** Java 版本使用 JLine 库处理跨平台终端输入
+
 #### Python 版本
 
 **要求：** Python 3.6+
@@ -168,6 +177,15 @@ mvn package
 # Run packaged JAR
 java -jar java/target/mario-java-1.0-SNAPSHOT.jar
 ```
+
+**Windows:**
+```powershell
+# Set UTF-8 encoding (fix garbled text)
+chcp 65001
+java -jar java/target/mario-java-1.0-SNAPSHOT.jar
+```
+
+**Note:** Java version uses JLine library for cross-platform terminal input
 
 #### Python Version
 

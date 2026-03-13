@@ -4,6 +4,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 /**
  * ╔══════════════════════════════════════════════════════╗
@@ -352,16 +356,17 @@ public class FCTerminalMario {
     static class InputHandler {
         final ConcurrentHashMap<String,Long> times = new ConcurrentHashMap<>();
         volatile boolean quit = false;
-        Process sttyProc;
         static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
-        InputStream terminalIn;
+        Terminal terminal;
+        LineReader reader;
 
         InputHandler() throws IOException {
             if (IS_WINDOWS) {
-                terminalIn = System.in;
+                terminal = TerminalBuilder.terminal();
+                terminal.enterRawMode();
+                reader = LineReaderBuilder.builder().terminal(terminal).build();
             } else {
                 new ProcessBuilder("sh", "-c", "stty raw -echo </dev/tty").inheritIO().start();
-                terminalIn = new FileInputStream("/dev/tty");
             }
             Thread t = new Thread(this::loop, "input");
             t.setDaemon(true);
@@ -370,16 +375,51 @@ public class FCTerminalMario {
 
         void loop() {
             try {
-                byte[] buf = new byte[8];
                 while (!quit) {
-                    if (terminalIn.available() > 0) {
-                        int n = terminalIn.read(buf);
-                        if (n > 0) parseInput(buf, n);
+                    if (IS_WINDOWS) {
+                        if (terminal.reader().ready()) {
+                            int key = terminal.reader().read();
+                            handleKey(key);
+                        }
                     } else {
-                        Thread.sleep(16);
+                        InputStream in = new FileInputStream("/dev/tty");
+                        if (in.available() > 0) {
+                            byte[] buf = new byte[8];
+                            int n = in.read(buf);
+                            if (n > 0) parseInput(buf, n);
+                        }
                     }
+                    Thread.sleep(16);
                 }
             } catch (Exception e) { /* ignore */ }
+        }
+
+        void handleKey(int key) {
+            if (key == -1) return;
+            if (key == 27) {
+                try {
+                    if (terminal.reader().ready()) {
+                        int key2 = terminal.reader().read();
+                        if (key2 == 91) {
+                            int key3 = terminal.reader().read();
+                            switch(key3) {
+                                case 65: press("up"); break;
+                                case 66: press("down"); break;
+                                case 67: press("right"); break;
+                                case 68: press("left"); break;
+                            }
+                        }
+                    } else {
+                        press("esc");
+                    }
+                } catch (IOException e) { /* ignore */ }
+            } else if (key == 3) {
+                press("q");
+            } else if (key >= 32 && key < 127) {
+                press(String.valueOf((char)key).toLowerCase());
+            } else if (key == 13 || key == 10) {
+                press(" ");
+            }
         }
 
         void parseInput(byte[] buf, int n) {

@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 60 FPS game loop
 - Cross-platform support (macOS, Linux, Windows)
 
+### Fixed
+- Windows console input handling (use JLine library)
+- Windows console output encoding (UTF-8 with chcp 65001)
+- Removed emoji characters that caused encoding issues on Windows
+- Python version Windows compatibility (msvcrt for input)
+- Arrow key detection on Python version
+
 ## [1.0.0] - 2026-03-13
 
 ### Added

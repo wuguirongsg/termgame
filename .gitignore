@@ -8,6 +8,7 @@ out/
 .mvn/
 mvnw
 mvnw.cmd
+dependency-reduced-pom.xml
 
 # Python
 __pycache__/
